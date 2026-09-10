@@ -1,7 +1,10 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
+
 require('dotenv').config();
+
+const seedRoles = require('./utils/seedRoles');
 
 const authRoutes = require('./routes/auth');
 const taskRoutes = require('./routes/tasks');
@@ -11,56 +14,52 @@ const adminRoutes = require('./routes/admin');
 const app = express();
 
 app.use((req, res, next) => {
-  res.header(
+  res.setHeader(
     'Access-Control-Allow-Origin',
-    'https://task-manager-client-ehri.onrender.com'
+    'http://localhost:5173'
   );
 
-  
-
-  res.header(
+  res.setHeader(
     'Access-Control-Allow-Methods',
-    'GET, POST, PUT, DELETE, OPTIONS'
+    'GET,POST,PUT,PATCH,DELETE,OPTIONS'
   );
 
-  res.header(
+  res.setHeader(
     'Access-Control-Allow-Headers',
     'Content-Type, Authorization'
   );
 
-  res.header(
+  res.setHeader(
     'Access-Control-Allow-Credentials',
     'true'
   );
 
   if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
+    return res.status(204).end();
   }
 
   next();
 });
 
 app.use(express.json());
-
 app.use(cookieParser());
 
-// DATABASE
 mongoose
   .connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log('✅ MongoDB Connected');
+  .then(async () => {
+    console.log('MongoDB connection successful');
+
+    await seedRoles();
   })
   .catch((e) => {
-    console.log('Mongo Error:', e);
+    console.log('Error', e);
   });
 
-// ROUTES
 app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
 
-// ROOT
 app.get('/', (req, res) => {
   res.send('API Running');
 });
@@ -68,5 +67,7 @@ app.get('/', (req, res) => {
 const PORT = process.env.PORT || 8080;
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(
+    `Server running on port ${PORT}`
+  );
 });

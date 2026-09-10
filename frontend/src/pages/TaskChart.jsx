@@ -40,7 +40,7 @@ export default function TaskChart(){
 
   const total = filteredTasks.length;
 
-  if(loading) return <div style={{padding:20, textAlign:'center'}}>Loading...</div>;
+  if(loading) return <div style={{padding:20, textAlign:'center'}}>Please wait. Loading...</div>;
 
   return (
     <div style={{padding:20, background:'#f5f5f5', minHeight:'100vh'}}>
