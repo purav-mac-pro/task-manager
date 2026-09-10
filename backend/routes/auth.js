@@ -31,11 +31,12 @@ const userResponse = (user) => ({
 
 const cookieOptions = () => ({
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'lax',
+  secure: true,
+  sameSite: 'none',
   maxAge: TOKEN_MAX_AGE_MS,
   path: '/',
 });
+
 
 const setAuthCookie = (res, user) => {
   const token = createToken(user);
@@ -68,7 +69,7 @@ router.post('/login', async (req, res) => {
     }
 
     setAuthCookie(res, user);
-    
+
     res.json({
       user: userResponse(user),
     });
@@ -140,13 +141,12 @@ router.get('/me', auth, async (req, res) => {
 });
 
 // LOGOUT
-router.post('/logout', (req, res) => {
-  res.clearCookie(COOKIE_NAME, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
-  });
+res.clearCookie(COOKIE_NAME, {
+  httpOnly: true,
+  secure: true,
+  sameSite: 'none',
+  path: '/',
+});
 
   res.json({
     msg: 'Logged out',
