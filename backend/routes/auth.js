@@ -151,7 +151,7 @@ res.clearCookie(COOKIE_NAME, {
   res.json({
     msg: 'Logged out',
   });
-});
+
 
 // EMPLOYEES
 router.get(
