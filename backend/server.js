@@ -16,6 +16,8 @@ app.use((req, res, next) => {
     'https://task-manager-client-ehri.onrender.com'
   );
 
+  
+
   res.header(
     'Access-Control-Allow-Methods',
     'GET, POST, PUT, DELETE, OPTIONS'
@@ -63,7 +65,8 @@ app.get('/', (req, res) => {
   res.send('API Running');
 });
 
-// SERVER
-app.listen(8080, () => {
-  console.log('Server running on port 8080');
+const PORT = process.env.PORT || 8080;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
