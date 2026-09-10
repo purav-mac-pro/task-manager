@@ -141,17 +141,18 @@ router.get('/me', auth, async (req, res) => {
 });
 
 // LOGOUT
-res.clearCookie(COOKIE_NAME, {
-  httpOnly: true,
-  secure: true,
-  sameSite: 'none',
-  path: '/',
-});
+router.post('/logout', (req, res) => {
+  res.clearCookie(COOKIE_NAME, {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none',
+    path: '/',
+  });
 
   res.json({
     msg: 'Logged out',
   });
-
+});
 
 // EMPLOYEES
 router.get(
