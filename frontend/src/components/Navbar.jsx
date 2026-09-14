@@ -1,7 +1,7 @@
-
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useLocation } from 'react-router-dom';
 import { logoutUser } from '../redux/authSlice';
+import { IconLogo, IconLogout } from './icons';
 
 export default function Navbar() {
   const { user } = useSelector((state) => state.auth);
@@ -9,121 +9,58 @@ export default function Navbar() {
   const location = useLocation();
 
   const isAdmin = user?.role === 'admin';
+  const isManager = user?.role === 'manager';
 
-  const linkStyle = (path) => ({
-    color: location.pathname === path ? '#fff' : '#bbb',
-    textDecoration: 'none',
-    padding: '8px 12px',
-    borderRadius: 6,
-    background:
-      location.pathname === path ? '#444' : 'transparent',
-    fontWeight: 500,
-  });
+  const initials = (user?.name || '?')
+    .split(' ')
+    .map((p) => p[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+
+  const navClass = (path) =>
+    `nav-link${location.pathname === path ? ' active' : ''}`;
 
   return (
-    <nav
-      style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '12px 20px',
-        background: '#222',
-        color: 'white',
-        gap: 20,
-        flexWrap: 'wrap',
-      }}
-    >
-      
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          flexWrap: 'wrap',
-        }}
-      >
-        
-        <Link
-          to={isAdmin ? '/admin' : `/${user?.role}`}
-          style={{
-            color: 'white',
-            textDecoration: 'none',
-            fontWeight: 'bold',
-          }}
-        >
+    <nav className="navbar">
+      <div className="navbar-left">
+        <Link to={isAdmin ? '/admin' : `/${user?.role}`} className="navbar-brand">
+          <span className="navbar-logo">
+            <IconLogo size={17} />
+          </span>
           Task Manager
         </Link>
 
-        
-        <span style={{ color: '#777' }}>|</span>
+        <span className="navbar-divider" />
 
-        
-        <span
-          style={{
-            color: '#bbb',
-            padding: '8px 4px',
-            fontWeight: 500,
-            textTransform: 'capitalize',
-          }}
-        >
-          {user?.role}
-        </span>
+        <span className="navbar-role-tag">{user?.role}</span>
 
-        
         {isAdmin && (
           <>
-            <span style={{ color: '#777' }}>|</span>
-
-            <Link
-              to="/admin/roles"
-              style={linkStyle('/admin/roles')}
-            >
+            <Link to="/admin/roles" className={navClass('/admin/roles')}>
               Manage Roles
             </Link>
-
-            <Link
-              to="/admin/users"
-              style={linkStyle('/admin/users')}
-            >
+            <Link to="/admin/users" className={navClass('/admin/users')}>
               Manage Users
             </Link>
           </>
         )}
 
-        
-        {(isAdmin || user?.role === 'manager') && (
-          <Link
-            to="/reports"
-            style={linkStyle('/reports')}
-          >
+        {(isAdmin || isManager) && (
+          <Link to="/reports" className={navClass('/reports')}>
             Reports
           </Link>
         )}
       </div>
 
-      
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-        }}
-      >
-        <span style={{ color: '#ddd' }}>
-          {user?.name}
-        </span>
+      <div className="navbar-right">
+        <div className="navbar-user">
+          <span className="avatar avatar-sm">{initials}</span>
+          <span className="navbar-user-name">{user?.name}</span>
+        </div>
 
-        <button
-          onClick={() => dispatch(logoutUser())}
-          style={{
-            background: '#dc3545',
-            color: 'white',
-            border: 'none',
-            padding: '7px 14px',
-            borderRadius: 6,
-            cursor: 'pointer',
-          }}
-        >
+        <button onClick={() => dispatch(logoutUser())} className="btn btn-secondary btn-sm">
+          <IconLogout size={14} />
           Logout
         </button>
       </div>

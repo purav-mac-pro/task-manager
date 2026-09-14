@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://task-manager-server-mcxj.onrender.com',
+  baseURL: 'http://localhost:8080',
   withCredentials: true, 
 });
 

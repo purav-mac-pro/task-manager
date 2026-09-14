@@ -1,25 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import {
-  fetchRoles,
-  createRole,
-  deleteRole,
-} from '../redux/tasksSlice';
+import { fetchRoles, createRole, deleteRole } from '../redux/tasksSlice';
+import { IconShield, IconPlus, IconTrash, IconInbox } from '../components/icons';
 
 export default function ManageRoles() {
   const dispatch = useDispatch();
 
-  const {
-    roles,
-    loading,
-    error,
-  } = useSelector((state) => state.tasks);
+  const { roles, loading, error } = useSelector((state) => state.tasks);
 
-  const [form, setForm] = useState({
-    name: '',
-    description: '',
-  });
+  const [form, setForm] = useState({ name: '', description: '' });
 
   useEffect(() => {
     dispatch(fetchRoles());
@@ -36,225 +26,121 @@ export default function ManageRoles() {
     );
 
     if (createRole.fulfilled.match(result)) {
-      alert('Role created successfully.');
-
-      setForm({
-        name: '',
-        description: '',
-      });
+      setForm({ name: '', description: '' });
     } else {
-      alert(
-        result.payload || 'Failed to create role'
-      );
+      alert(result.payload || 'Failed to create role');
     }
   };
 
   const handleDelete = async (id) => {
-    if (
-      !window.confirm(
-        'Are you sure you want to delete this role?'
-      )
-    ) {
-      return;
-    }
+    if (!window.confirm('Are you sure you want to delete this role?')) return;
 
     const result = await dispatch(deleteRole(id));
-
     if (!deleteRole.fulfilled.match(result)) {
-      alert(
-        result.payload || 'Failed to delete role'
-      );
+      alert(result.payload || 'Failed to delete role');
     }
   };
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: '#f5f5f5',
-        padding: 25,
-        boxSizing: 'border-box',
-      }}
-    >
-      <div
-        style={{
-          maxWidth: 900,
-          margin: '0 auto',
-        }}
-      >
-        <h2 style={{ textAlign: 'center' }}>
-          Manage Roles
-        </h2>
+    <div className="page">
+      <div className="page-header">
+        <div>
+          <p className="page-eyebrow">Administration</p>
+          <h1 className="page-title">Manage Roles</h1>
+          <p className="page-subtitle">Define the roles available to assign to users.</p>
+        </div>
+      </div>
 
-        
-        <form
-          onSubmit={handleSubmit}
-          style={{
-            background: '#fff',
-            border: '1px solid #ddd',
-            borderRadius: 12,
-            padding: 20,
-            maxWidth: 550,
-            margin: '0 auto 30px',
-            boxShadow:
-              '0 4px 12px rgba(0,0,0,0.06)',
-          }}
-        >
-          <h3 style={{ marginTop: 0 }}>
-            Create New Role
-          </h3>
+      <div className="container">
+        <div className="grid-2">
+          <div className="card card-pad">
+            <div className="card-title-row" style={{ marginBottom: 18 }}>
+              <span className="card-icon">
+                <IconPlus size={18} />
+              </span>
+              <h3>Create New Role</h3>
+            </div>
 
-          <input
-            type="text"
-            placeholder="Role Name"
-            value={form.name}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                name: e.target.value,
-              })
-            }
-            required
-            style={{
-              width: '100%',
-              padding: 11,
-              marginBottom: 10,
-              border: '1px solid #ccc',
-              borderRadius: 6,
-              boxSizing: 'border-box',
-            }}
-          />
-
-          <input
-            type="text"
-            placeholder="Role Description"
-            value={form.description}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                description: e.target.value,
-              })
-            }
-            style={{
-              width: '100%',
-              padding: 11,
-              marginBottom: 10,
-              border: '1px solid #ccc',
-              borderRadius: 6,
-              boxSizing: 'border-box',
-            }}
-          />
-
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              width: '100%',
-              padding: 12,
-              background: '#222',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 6,
-              cursor: 'pointer',
-            }}
-          >
-            {loading ? 'Creating...' : 'Create Role'}
-          </button>
-        </form>
-
-        
-        <div
-          style={{
-            background: '#fff',
-            border: '1px solid #ddd',
-            borderRadius: 12,
-            padding: 20,
-          }}
-        >
-          <h3 style={{ marginTop: 0 }}>
-            Available Roles
-          </h3>
-
-          {error && (
-            <p style={{ color: '#dc3545' }}>
-              {error}
-            </p>
-          )}
-
-          {roles.length === 0 ? (
-            <p style={{ color: '#777' }}>
-              No roles found.
-            </p>
-          ) : (
-            roles.map((role) => (
-              <div
-                key={role._id}
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  gap: 15,
-                  padding: 15,
-                  borderBottom:
-                    '1px solid #eee',
-                }}
-              >
-                <div>
-                  <strong
-                    style={{
-                      textTransform: 'capitalize',
-                    }}
-                  >
-                    {role.name}
-                  </strong>
-
-                  {role.isSystem && (
-                    <span
-                      style={{
-                        marginLeft: 8,
-                        fontSize: 11,
-                        background: '#eee',
-                        padding: '3px 7px',
-                        borderRadius: 10,
-                      }}
-                    >
-                      Built-in
-                    </span>
-                  )}
-
-                  {role.description && (
-                    <div
-                      style={{
-                        fontSize: 13,
-                        color: '#777',
-                        marginTop: 4,
-                      }}
-                    >
-                      {role.description}
-                    </div>
-                  )}
-                </div>
-
-                {!role.isSystem && (
-                  <button
-                    onClick={() =>
-                      handleDelete(role._id)
-                    }
-                    style={{
-                      background: '#dc3545',
-                      color: '#fff',
-                      border: 'none',
-                      padding: '7px 12px',
-                      borderRadius: 5,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    Delete
-                  </button>
-                )}
+            <form onSubmit={handleSubmit}>
+              <div className="field">
+                <label className="label">Role Name</label>
+                <input
+                  className="input"
+                  type="text"
+                  placeholder="e.g. Team Lead"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  required
+                />
               </div>
-            ))
-          )}
+
+              <div className="field">
+                <label className="label">Description</label>
+                <input
+                  className="input"
+                  type="text"
+                  placeholder="What this role can do"
+                  value={form.description}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                />
+              </div>
+
+              <button type="submit" className="btn btn-primary btn-block" disabled={loading} style={{ marginTop: 4 }}>
+                {loading ? 'Creating...' : 'Create Role'}
+              </button>
+            </form>
+          </div>
+
+          <div className="card">
+            <div className="card-header">
+              <h3>Available Roles ({roles.length})</h3>
+            </div>
+
+            {error && (
+              <div style={{ padding: '14px 24px 0' }}>
+                <div className="form-error-banner" style={{ marginBottom: 0 }}>{error}</div>
+              </div>
+            )}
+
+            {roles.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-icon">
+                  <IconInbox size={40} />
+                </div>
+                <p className="empty-state-title">No roles found</p>
+                <p>Create your first role using the form.</p>
+              </div>
+            ) : (
+              <div className="list">
+                {roles.map((role) => (
+                  <div key={role._id} className="list-item">
+                    <div className="list-item-main">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                        <span className="card-icon" style={{ width: 28, height: 28 }}>
+                          <IconShield size={14} />
+                        </span>
+                        <span className="list-item-title" style={{ textTransform: 'capitalize' }}>
+                          {role.name}
+                        </span>
+                        {role.isSystem && <span className="badge badge-neutral">Built-in</span>}
+                      </div>
+                      {role.description && <div className="list-item-desc">{role.description}</div>}
+                    </div>
+
+                    {!role.isSystem && (
+                      <button
+                        onClick={() => handleDelete(role._id)}
+                        className="btn btn-danger btn-sm"
+                      >
+                        <IconTrash size={14} />
+                        Delete
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

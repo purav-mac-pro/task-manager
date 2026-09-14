@@ -7,20 +7,16 @@ import {
   createTask,
   deleteTask,
 } from '../redux/tasksSlice';
+import { IconPlus, IconTrash, IconInbox } from '../components/icons';
+import StatusBadge from '../components/StatusBadge';
 
 export default function AdminDashboard() {
   const dispatch = useDispatch();
 
-  const {
-    items: tasks,
-    adminUsers: users,
-  } = useSelector((state) => state.tasks);
+  const { items: tasks, adminUsers: users } = useSelector((state) => state.tasks);
 
-  const [form, setForm] = useState({
-    title: '',
-    description: '',
-    assignedTo: '',
-  });
+  const [form, setForm] = useState({ title: '', description: '', assignedTo: '' });
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     dispatch(fetchAdminUsers());
@@ -35,279 +31,158 @@ export default function AdminDashboard() {
       return;
     }
 
+    setSubmitting(true);
     const result = await dispatch(createTask(form));
+    setSubmitting(false);
 
     if (createTask.fulfilled.match(result)) {
-      alert('Task Added');
-
-      setForm({
-        title: '',
-        description: '',
-        assignedTo: '',
-      });
+      setForm({ title: '', description: '', assignedTo: '' });
     } else {
       alert(result.payload || 'Failed to add task');
     }
   };
 
   const handleDeleteTask = (id) => {
-    if (!window.confirm('Delete this task?')) {
-      return;
-    }
-
+    if (!window.confirm('Delete this task?')) return;
     dispatch(deleteTask(id));
   };
 
-  const cardStyle = {
-    border: '1px solid #ccc',
-    padding: 20,
-    background: '#fff',
-    borderRadius: 12,
-    width: '100%',
-    maxWidth: 500,
-    boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-    boxSizing: 'border-box',
-  };
-
-  const inputStyle = {
-    width: '100%',
-    padding: 10,
-    margin: '8px 0',
-    borderRadius: 6,
-    border: '1px solid #ccc',
-    boxSizing: 'border-box',
-  };
+  const pendingCount = tasks.filter((t) => t.status === 'pending').length;
+  const progressCount = tasks.filter((t) => t.status === 'in-progress').length;
+  const doneCount = tasks.filter((t) => t.status === 'completed').length;
 
   return (
-    <div
-      style={{
-        padding: 20,
-        background: '#f5f5f5',
-        minHeight: '100vh',
-      }}
-    >
-      <h2 style={{ textAlign: 'center' }}>
-        Admin Dashboard
-      </h2>
-
-      
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          marginBottom: 35,
-        }}
-      >
-        <form
-          onSubmit={handleCreateTask}
-          style={cardStyle}
-        >
-          <h3
-            style={{
-              marginTop: 0,
-              textAlign: 'center',
-            }}
-          >
-            Add New Task
-          </h3>
-
-          <input
-            style={inputStyle}
-            placeholder="Title"
-            value={form.title}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                title: e.target.value,
-              })
-            }
-            required
-          />
-
-          <textarea
-            style={{
-              ...inputStyle,
-              minHeight: 100,
-              resize: 'vertical',
-            }}
-            placeholder="Description"
-            value={form.description}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                description: e.target.value,
-              })
-            }
-          />
-
-          <select
-            style={inputStyle}
-            value={form.assignedTo}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                assignedTo: e.target.value,
-              })
-            }
-            required
-          >
-            <option value="">
-              -- Select User --
-            </option>
-
-            {users
-              .filter((u) => u.role !== 'admin')
-              .map((u) => (
-                <option
-                  key={u._id}
-                  value={u._id}
-                >
-                  {u.name} - {u.role} ({u.email})
-                </option>
-              ))}
-          </select>
-
-          <button
-            type="submit"
-            style={{
-              width: '100%',
-              padding: 12,
-              background: '#222',
-              color: 'white',
-              border: 'none',
-              borderRadius: 6,
-              cursor: 'pointer',
-              marginTop: 8,
-            }}
-          >
-            Add Task
-          </button>
-        </form>
+    <div className="page">
+      <div className="page-header">
+        <div>
+          <p className="page-eyebrow">Overview</p>
+          <h1 className="page-title">Admin Dashboard</h1>
+          <p className="page-subtitle">Create tasks and keep an eye on everything.</p>
+        </div>
       </div>
 
-      
-      <h3
-        style={{
-          textAlign: 'center',
-          marginTop: 30,
-        }}
-      >
-        All Tasks ({tasks.length})
-      </h3>
-
-      <div
-        style={{
-          maxWidth: 800,
-          margin: '0 auto',
-        }}
-      >
-        {tasks.length === 0 ? (
-          <div
-            style={{
-              background: '#fff',
-              border: '1px solid #ddd',
-              borderRadius: 8,
-              padding: 20,
-              textAlign: 'center',
-              color: '#777',
-            }}
-          >
-            No tasks found.
+      <div className="container">
+        <div className="stat-row">
+          <div className="stat-chip">
+            <div className="stat-value">{tasks.length}</div>
+            <div className="stat-label">Total Tasks</div>
           </div>
-        ) : (
-          tasks.map((t) => (
-            <div
-              key={t._id}
-              style={{
-                border: '1px solid #ddd',
-                padding: 15,
-                marginBottom: 10,
-                background: '#fff',
-                borderRadius: 8,
-              }}
-            >
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  gap: 10,
-                }}
-              >
-                <b>{t.title}</b>
+          <div className="stat-chip accent-warning">
+            <div className="stat-value">{pendingCount}</div>
+            <div className="stat-label">Pending</div>
+          </div>
+          <div className="stat-chip accent-primary">
+            <div className="stat-value">{progressCount}</div>
+            <div className="stat-label">In Progress</div>
+          </div>
+          <div className="stat-chip accent-success">
+            <div className="stat-value">{doneCount}</div>
+            <div className="stat-label">Completed</div>
+          </div>
+        </div>
 
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: 8,
-                    alignItems: 'center',
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: 11,
-                      background: '#eee',
-                      padding: '3px 8px',
-                      borderRadius: 10,
-                    }}
-                  >
-                    {t.status}
-                  </span>
+        <div className="grid-2">
+          <div className="card card-pad">
+            <div className="card-title-row" style={{ marginBottom: 18 }}>
+              <span className="card-icon">
+                <IconPlus size={18} />
+              </span>
+              <h3>Add New Task</h3>
+            </div>
 
-                  <button
-                    onClick={() =>
-                      handleDeleteTask(t._id)
-                    }
-                    style={{
-                      background: '#dc3545',
-                      color: 'white',
-                      border: 'none',
-                      padding: '5px 10px',
-                      borderRadius: 5,
-                      cursor: 'pointer',
-                      fontSize: 12,
-                    }}
-                  >
-                    Delete
-                  </button>
-                </div>
+            <form onSubmit={handleCreateTask}>
+              <div className="field">
+                <label className="label">Title</label>
+                <input
+                  className="input"
+                  placeholder="e.g. Prepare quarterly report"
+                  value={form.title}
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                  required
+                />
               </div>
 
-              <p
-                style={{
-                  margin: '8px 0',
-                  fontSize: 14,
-                }}
-              >
-                {t.description || 'No description'}
-              </p>
+              <div className="field">
+                <label className="label">Description</label>
+                <textarea
+                  className="textarea"
+                  placeholder="Add any helpful context..."
+                  value={form.description}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                />
+              </div>
 
-              <p
-                style={{
-                  margin: '5px 0',
-                  fontSize: 13,
-                  color: '#555',
-                }}
-              >
-                Assigned to:{' '}
-                <b>
-                  {t.assignedTo?.name || 'N/A'}
-                </b>
-              </p>
+              <div className="field">
+                <label className="label">Assign To</label>
+                <select
+                  className="select"
+                  value={form.assignedTo}
+                  onChange={(e) => setForm({ ...form, assignedTo: e.target.value })}
+                  required
+                >
+                  <option value="">-- Select User --</option>
+                  {users
+                    .filter((u) => u.role !== 'admin')
+                    .map((u) => (
+                      <option key={u._id} value={u._id}>
+                        {u.name} - {u.role} ({u.email})
+                      </option>
+                    ))}
+                </select>
+              </div>
 
-              <p
-                style={{
-                  margin: '5px 0',
-                  fontSize: 13,
-                  color: '#555',
-                }}
-              >
-                Remark:{' '}
-                {t.remark || 'No remark'}
-              </p>
+              <button type="submit" className="btn btn-primary btn-block" disabled={submitting} style={{ marginTop: 4 }}>
+                {submitting ? 'Adding...' : 'Add Task'}
+              </button>
+            </form>
+          </div>
+
+          <div className="card">
+            <div className="card-header">
+              <h3>All Tasks ({tasks.length})</h3>
             </div>
-          ))
-        )}
+
+            {tasks.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-icon">
+                  <IconInbox size={40} />
+                </div>
+                <p className="empty-state-title">No tasks yet</p>
+                <p>Create your first task using the form.</p>
+              </div>
+            ) : (
+              <div className="list">
+                {tasks.map((t) => (
+                  <div key={t._id} className="list-item">
+                    <div className="list-item-main">
+                      <div className="list-item-title">{t.title}</div>
+                      <div className="list-item-desc">{t.description || 'No description'}</div>
+                      <div className="list-item-meta">
+                        <span>
+                          Assigned to <b>{t.assignedTo?.name || 'N/A'}</b>
+                        </span>
+                        <span>
+                          Remark: <b>{t.remark || 'No remark'}</b>
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="list-item-actions">
+                      <StatusBadge status={t.status} />
+                      <button
+                        onClick={() => handleDeleteTask(t._id)}
+                        className="btn btn-danger btn-sm btn-icon"
+                        title="Delete task"
+                      >
+                        <IconTrash />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

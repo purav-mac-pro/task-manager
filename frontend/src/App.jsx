@@ -19,7 +19,12 @@ function Protected({ children, allowed }) {
   const { user, loading } = useSelector((state) => state.auth);
 
   if (loading) {
-    return <div style={{ padding: 40, textAlign: 'center' }}>Please wait. Loading...</div>;
+    return (
+      <div className="loading-shell">
+        <div className="spinner" />
+        Please wait, loading...
+      </div>
+    );
   }
 
   if (!user) {

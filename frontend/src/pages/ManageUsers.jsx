@@ -8,16 +8,12 @@ import {
   updateUserRole,
   deleteUser,
 } from '../redux/tasksSlice';
+import { IconPlus, IconTrash, IconInbox } from '../components/icons';
 
 export default function ManageUsers() {
   const dispatch = useDispatch();
 
-  const {
-    adminUsers: users,
-    roles,
-    loading,
-    error,
-  } = useSelector((state) => state.tasks);
+  const { adminUsers: users, roles, loading, error } = useSelector((state) => state.tasks);
 
   const [userForm, setUserForm] = useState({
     name: '',
@@ -28,9 +24,7 @@ export default function ManageUsers() {
 
   const [roleEdits, setRoleEdits] = useState({});
 
-  const assignableRoles = roles.filter(
-    (role) => role.name !== 'admin'
-  );
+  const assignableRoles = roles.filter((role) => role.name !== 'admin');
 
   useEffect(() => {
     dispatch(fetchAdminUsers());
@@ -38,400 +32,223 @@ export default function ManageUsers() {
   }, [dispatch]);
 
   useEffect(() => {
-    if (
-      assignableRoles.length > 0 &&
-      !assignableRoles.some(
-        (role) => role.name === userForm.role
-      )
-    ) {
-      setUserForm((prev) => ({
-        ...prev,
-        role: assignableRoles[0].name,
-      }));
+    if (assignableRoles.length > 0 && !assignableRoles.some((role) => role.name === userForm.role)) {
+      setUserForm((prev) => ({ ...prev, role: assignableRoles[0].name }));
     }
   }, [roles]);
 
   const handleCreateUser = async (e) => {
     e.preventDefault();
 
-    const result = await dispatch(
-      createUser(userForm)
-    );
+    const result = await dispatch(createUser(userForm));
 
     if (createUser.fulfilled.match(result)) {
-      alert('User created successfully.');
-
       setUserForm({
         name: '',
         email: '',
         password: '',
-        role:
-          assignableRoles[0]?.name ||
-          'Employee',
+        role: assignableRoles[0]?.name || 'Employee',
       });
     } else {
-      alert(
-        result.payload || 'Failed to create user'
-      );
+      alert(result.payload || 'Failed to create user');
     }
   };
 
   const handleRoleChange = (userId, role) => {
-    setRoleEdits((prev) => ({
-      ...prev,
-      [userId]: role,
-    }));
+    setRoleEdits((prev) => ({ ...prev, [userId]: role }));
   };
 
   const handleUpdateRole = async (userId) => {
     const role = roleEdits[userId];
+    if (!role) return;
 
-    if (!role) {
-      return;
-    }
-
-    const result = await dispatch(
-      updateUserRole({
-        id: userId,
-        role,
-      })
-    );
+    const result = await dispatch(updateUserRole({ id: userId, role }));
 
     if (updateUserRole.fulfilled.match(result)) {
-      alert('Role updated successfully.');
-
       setRoleEdits((prev) => {
         const next = { ...prev };
         delete next[userId];
         return next;
       });
     } else {
-      alert(
-        result.payload || 'Failed to update role'
-      );
+      alert(result.payload || 'Failed to update role');
     }
   };
 
-  // NEW — delete user handler
   const handleDeleteUser = async (userId, userName) => {
-    if (
-      !window.confirm(
-        `Are you sure you want to Delete "${userName}"?`
-      )
-    ) {
-      return;
-    }
+    if (!window.confirm(`Are you sure you want to Delete "${userName}"?`)) return;
 
     const result = await dispatch(deleteUser(userId));
-
-    if (deleteUser.fulfilled.match(result)) {
-      alert('User deleted.');
-    } else {
+    if (!deleteUser.fulfilled.match(result)) {
       alert(result.payload || 'Failed to delete user');
     }
   };
 
+  const visibleUsers = users.filter((user) => user.role !== 'admin');
+
+  const initials = (name) =>
+    (name || '?')
+      .split(' ')
+      .map((p) => p[0])
+      .slice(0, 2)
+      .join('')
+      .toUpperCase();
+
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: '#f5f5f5',
-        padding: 25,
-        boxSizing: 'border-box',
-      }}
-    >
-      <div
-        style={{
-          maxWidth: 1000,
-          margin: '0 auto',
-        }}
-      >
-        <h2 style={{ textAlign: 'center' }}>
-          Manage Users
-        </h2>
+    <div className="page">
+      <div className="page-header">
+        <div>
+          <p className="page-eyebrow">Administration</p>
+          <h1 className="page-title">Manage Users</h1>
+          <p className="page-subtitle">Create accounts and update roles for your team.</p>
+        </div>
+      </div>
 
-        
-        <form
-          onSubmit={handleCreateUser}
-          style={{
-            background: '#fff',
-            border: '1px solid #ddd',
-            borderRadius: 12,
-            padding: 20,
-            maxWidth: 550,
-            margin: '0 auto 30px',
-            boxShadow:
-              '0 4px 12px rgba(0,0,0,0.06)',
-          }}
-        >
-          <h3 style={{ marginTop: 0 }}>
-            Create New User
-          </h3>
+      <div className="container">
+        <div className="grid-2">
+          <div className="card card-pad">
+            <div className="card-title-row" style={{ marginBottom: 18 }}>
+              <span className="card-icon">
+                <IconPlus size={18} />
+              </span>
+              <h3>Create New User</h3>
+            </div>
 
-          <input
-            placeholder="Name"
-            value={userForm.name}
-            onChange={(e) =>
-              setUserForm({
-                ...userForm,
-                name: e.target.value,
-              })
-            }
-            required
-            style={inputStyle}
-          />
+            <form onSubmit={handleCreateUser}>
+              <div className="field">
+                <label className="label">Name</label>
+                <input
+                  className="input"
+                  placeholder="Enter name"
+                  value={userForm.name}
+                  onChange={(e) => setUserForm({ ...userForm, name: e.target.value })}
+                  required
+                />
+              </div>
 
-          <input
-            placeholder="Email"
-            type="email"
-            value={userForm.email}
-            onChange={(e) =>
-              setUserForm({
-                ...userForm,
-                email: e.target.value,
-              })
-            }
-            required
-            style={inputStyle}
-          />
+              <div className="field">
+                <label className="label">Email</label>
+                <input
+                  className="input"
+                  placeholder="Enter email address"
+                  type="email"
+                  value={userForm.email}
+                  onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
+                  required
+                />
+              </div>
 
-          <input
-            placeholder="Password"
-            type="password"
-            value={userForm.password}
-            onChange={(e) =>
-              setUserForm({
-                ...userForm,
-                password: e.target.value,
-              })
-            }
-            required
-            style={inputStyle}
-          />
+              <div className="field">
+                <label className="label">Password</label>
+                <input
+                  className="input"
+                  placeholder="Enter password"
+                  type="password"
+                  value={userForm.password}
+                  onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
+                  required
+                />
+              </div>
 
-          <select
-            value={userForm.role}
-            onChange={(e) =>
-              setUserForm({
-                ...userForm,
-                role: e.target.value,
-              })
-            }
-            style={inputStyle}
-          >
-            {assignableRoles.map((role) => (
-              <option
-                key={role._id}
-                value={role.name}
-              >
-                {role.name}
-              </option>
-            ))}
-          </select>
+              <div className="field">
+                <label className="label">Role</label>
+                <select
+                  className="select"
+                  value={userForm.role}
+                  onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}
+                >
+                  {assignableRoles.map((role) => (
+                    <option key={role._id} value={role.name}>
+                      {role.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              width: '100%',
-              padding: 12,
-              background: '#222',
-              color: '#fff',
-              border: 'none',
-              borderRadius: 6,
-              cursor: 'pointer',
-            }}
-          >
-            {loading
-              ? 'Creating...'
-              : 'Create User'}
-          </button>
-        </form>
+              <button type="submit" className="btn btn-primary btn-block" disabled={loading} style={{ marginTop: 4 }}>
+                {loading ? 'Creating...' : 'Create User'}
+              </button>
+            </form>
+          </div>
 
-        
-        <div
-          style={{
-            background: '#fff',
-            border: '1px solid #ddd',
-            borderRadius: 12,
-            padding: 20,
-          }}
-        >
-          <h3 style={{ marginTop: 0 }}>
-            All Users
-          </h3>
+          <div className="card">
+            <div className="card-header">
+              <h3>All Users ({visibleUsers.length})</h3>
+            </div>
 
-          {error && (
-            <p style={{ color: '#dc3545' }}>
-              {error}
-            </p>
-          )}
+            {error && (
+              <div style={{ padding: '14px 24px 0' }}>
+                <div className="form-error-banner" style={{ marginBottom: 0 }}>{error}</div>
+              </div>
+            )}
 
-          {users.length === 0 ? (
-            <p style={{ color: '#777' }}>
-              No users found.
-            </p>
-          ) : (
-            users
-              .filter((user) => user.role !== 'admin')
-              .map((user) => {
-                const selectedRole =
-                  roleEdits[user._id] ??
-                  user.role;
+            {visibleUsers.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-icon">
+                  <IconInbox size={40} />
+                </div>
+                <p className="empty-state-title">No users found</p>
+                <p>Create your first user using the form.</p>
+              </div>
+            ) : (
+              <div className="list">
+                {visibleUsers.map((user) => {
+                  const selectedRole = roleEdits[user._id] ?? user.role;
+                  const changed = selectedRole !== user.role;
 
-                const changed =
-                  selectedRole !== user.role;
-
-                return (
-                  <div
-                    key={user._id}
-                    style={{
-                      display: 'flex',
-                      justifyContent:
-                        'space-between',
-                      alignItems: 'center',
-                      gap: 20,
-                      padding: 15,
-                      borderBottom:
-                        '1px solid #eee',
-                      flexWrap: 'wrap',
-                    }}
-                  >
-                    
-                    <div
-                      style={{
-                        flex: 1,
-                        minWidth: 220,
-                      }}
-                    >
-                      <strong>
-                        {user.name}
-                      </strong>
-
-                      <div
-                        style={{
-                          color: '#777',
-                          fontSize: 13,
-                          marginTop: 3,
-                        }}
-                      >
-                        {user.email}
+                  return (
+                    <div key={user._id} className="list-item">
+                      <div className="list-item-main" style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                        <span className="avatar">{initials(user.name)}</span>
+                        <div>
+                          <div className="list-item-title">{user.name}</div>
+                          <div className="list-item-desc">{user.email}</div>
+                          <div style={{ marginTop: 6 }}>
+                            <span className="badge badge-role" style={{ textTransform: 'capitalize' }}>
+                              {user.role}
+                            </span>
+                          </div>
+                        </div>
                       </div>
 
-                      <div
-                        style={{
-                          marginTop: 5,
-                          fontSize: 13,
-                        }}
-                      >
-                        Current role:{' '}
-                        <strong
-                          style={{
-                            textTransform:
-                              'capitalize',
-                          }}
+                      <div className="list-item-actions">
+                        <select
+                          className="select"
+                          style={{ minWidth: 140 }}
+                          value={selectedRole}
+                          onChange={(e) => handleRoleChange(user._id, e.target.value)}
                         >
-                          {user.role}
-                        </strong>
-                      </div>
-                    </div>
-
-                    
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 8,
-                        flexWrap: 'wrap',
-                      }}
-                    >
-                      <select
-                        value={selectedRole}
-                        onChange={(e) =>
-                          handleRoleChange(
-                            user._id,
-                            e.target.value
-                          )
-                        }
-                        style={{
-                          padding: 9,
-                          border:
-                            '1px solid #ccc',
-                          borderRadius: 6,
-                          minWidth: 140,
-                        }}
-                      >
-                        {assignableRoles.map(
-                          (role) => (
-                            <option
-                              key={role._id}
-                              value={role.name}
-                            >
+                          {assignableRoles.map((role) => (
+                            <option key={role._id} value={role.name}>
                               {role.name}
                             </option>
-                          )
-                        )}
-                      </select>
+                          ))}
+                        </select>
 
-                      <button
-                        onClick={() =>
-                          handleUpdateRole(
-                            user._id
-                          )
-                        }
-                        disabled={!changed}
-                        style={{
-                          background: changed
-                            ? '#222'
-                            : '#aaa',
-                          color: '#fff',
-                          border: 'none',
-                          padding:
-                            '9px 14px',
-                          borderRadius: 6,
-                          cursor: changed
-                            ? 'pointer'
-                            : 'not-allowed',
-                        }}
-                      >
-                        Update Role
-                      </button>
+                        <button
+                          onClick={() => handleUpdateRole(user._id)}
+                          disabled={!changed}
+                          className="btn btn-secondary btn-sm"
+                        >
+                          Update Role
+                        </button>
 
-                      {/* NEW — delete user button */}
-                      <button
-                        onClick={() =>
-                          handleDeleteUser(
-                            user._id,
-                            user.name
-                          )
-                        }
-                        style={{
-                          background: '#dc3545',
-                          color: '#fff',
-                          border: 'none',
-                          padding: '9px 14px',
-                          borderRadius: 6,
-                          cursor: 'pointer',
-                        }}
-                      >
-                        Delete
-                      </button>
+                        <button
+                          onClick={() => handleDeleteUser(user._id, user.name)}
+                          className="btn btn-danger btn-sm btn-icon"
+                          title="Delete user"
+                        >
+                          <IconTrash size={14} />
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                );
-              })
-          )}
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
   );
 }
-
-const inputStyle = {
-  width: '100%',
-  padding: 11,
-  marginBottom: 10,
-  border: '1px solid #ccc',
-  borderRadius: 6,
-  boxSizing: 'border-box',
-};

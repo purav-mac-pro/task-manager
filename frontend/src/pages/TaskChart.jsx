@@ -1,34 +1,35 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { fetchTasks, fetchEmployees } from '../redux/tasksSlice';
+import { IconChart } from '../components/icons';
 
 const STATUS_COLORS = {
-  completed: '#22c55e',
-  'in-progress': '#f59e0b',
-  pending: '#ef4444',
+  completed: '#16a34a',
+  'in-progress': '#2563eb',
+  pending: '#d97706',
 };
 
-export default function TaskChart(){
+export default function TaskChart() {
   const dispatch = useDispatch();
-  const { items: tasks, employees, loading } = useSelector(state => state.tasks);
+  const { items: tasks, employees, loading } = useSelector((state) => state.tasks);
   const [selectedEmployee, setSelectedEmployee] = useState('');
 
-  useEffect(()=>{
+  useEffect(() => {
     dispatch(fetchEmployees());
     dispatch(fetchTasks());
-  },[dispatch]);
+  }, [dispatch]);
 
-  const filteredTasks = useMemo(()=>{
-    if(!selectedEmployee) return tasks;
-    return tasks.filter(t => t.assignedTo?._id === selectedEmployee);
-  },[tasks, selectedEmployee]);
+  const filteredTasks = useMemo(() => {
+    if (!selectedEmployee) return tasks;
+    return tasks.filter((t) => t.assignedTo?._id === selectedEmployee);
+  }, [tasks, selectedEmployee]);
 
-  const chartData = useMemo(()=>{
+  const chartData = useMemo(() => {
     const counts = { completed: 0, 'in-progress': 0, pending: 0 };
-    filteredTasks.forEach(t=>{
+    filteredTasks.forEach((t) => {
       const status = t.status || 'pending';
-      if(counts[status] !== undefined) counts[status]++;
+      if (counts[status] !== undefined) counts[status]++;
       else counts.pending++;
     });
     return [
@@ -36,60 +37,88 @@ export default function TaskChart(){
       { name: 'In Progress', key: 'in-progress', count: counts['in-progress'] },
       { name: 'Pending', key: 'pending', count: counts.pending },
     ];
-  },[filteredTasks]);
+  }, [filteredTasks]);
 
   const total = filteredTasks.length;
 
-  if(loading) return <div style={{padding:20, textAlign:'center'}}>Please wait. Loading...</div>;
+  if (loading) {
+    return (
+      <div className="loading-shell">
+        <div className="spinner" />
+        Please wait, loading...
+      </div>
+    );
+  }
 
   return (
-    <div style={{padding:20, background:'#f5f5f5', minHeight:'100vh'}}>
-      <h2 style={{textAlign:'center'}}>Task Report</h2>
-
-      <div style={{display:'flex', justifyContent:'center', marginBottom:24}}>
-        <select
-          value={selectedEmployee}
-          onChange={e=>setSelectedEmployee(e.target.value)}
-          style={{padding:10, borderRadius:6, border:'1px solid #ccc', minWidth:260}}
-        >
-          <option value=""> All Employees </option>
-          {employees.map(emp=>(
-            <option key={emp._id} value={emp._id}>{emp.name} - {emp.email}</option>
-          ))}
-        </select>
+    <div className="page">
+      <div className="page-header">
+        <div>
+          <p className="page-eyebrow">Insights</p>
+          <h1 className="page-title">Task Report</h1>
+          <p className="page-subtitle">Breakdown of task status across your team.</p>
+        </div>
       </div>
 
-      <div style={{maxWidth:700, margin:'0 auto', background:'#fff', borderRadius:12, padding:20, boxShadow:'0 4px 12px rgba(0,0,0,0.08)'}}>
-        <p style={{textAlign:'center', color:'#666', marginTop:0}}>
-          {selectedEmployee
-            ? `Showing ${total} task for ${employees.find(e=>e._id===selectedEmployee)?.name || ''}`
-            : `Showing ${total} task for All Employees`}
-        </p>
+      <div className="container-narrow">
+        <div className="field" style={{ maxWidth: 340, margin: '0 auto 20px' }}>
+          <select
+            className="select"
+            value={selectedEmployee}
+            onChange={(e) => setSelectedEmployee(e.target.value)}
+          >
+            <option value="">All Employees</option>
+            {employees.map((emp) => (
+              <option key={emp._id} value={emp._id}>
+                {emp.name} - {emp.email}
+              </option>
+            ))}
+          </select>
+        </div>
 
-        {total === 0 ? (
-          <p style={{textAlign:'center', color:'#999'}}>No tasks found.</p>
-        ) : (
-          <ResponsiveContainer width="100%" height={320}>
-            <BarChart data={chartData}>
-              <XAxis dataKey="name" />
-              <YAxis allowDecimals={false} />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="count" name="Tasks" radius={[6,6,0,0]}>
-                {chartData.map(entry => (
-                  <Cell key={entry.key} fill={STATUS_COLORS[entry.key]} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        )}
+        <div className="card card-pad">
+          <div className="card-title-row" style={{ marginBottom: 4 }}>
+            <span className="card-icon">
+              <IconChart size={18} />
+            </span>
+            <div>
+              <h3 style={{ marginBottom: 2 }}>
+                {selectedEmployee
+                  ? employees.find((e) => e._id === selectedEmployee)?.name || ''
+                  : 'All Employees'}
+              </h3>
+              <p className="text-muted" style={{ fontSize: 13 }}>{total} task{total === 1 ? '' : 's'} total</p>
+            </div>
+          </div>
 
-        <div style={{display:'flex', justifyContent:'center', gap:24, marginTop:16, fontSize:13}}>
-          <span><span style={{display:'inline-block', width:10, height:10, background:STATUS_COLORS.completed, borderRadius:2, marginRight:6}}></span>Completed: {chartData[0].count}</span>
-          <span><span style={{display:'inline-block', width:10, height:10, background:STATUS_COLORS['in-progress'], borderRadius:2, marginRight:6}}></span>In Progress: {chartData[1].count}</span>
-          <span><span style={{display:'inline-block', width:10, height:10, background:STATUS_COLORS.pending, borderRadius:2, marginRight:6}}></span>Pending: {chartData[2].count}</span>
+          {total === 0 ? (
+            <p className="text-center text-muted" style={{ padding: '32px 0' }}>No tasks found.</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={chartData} margin={{ top: 16, right: 8, left: -8, bottom: 0 }}>
+                <CartesianGrid vertical={false} stroke="var(--border-soft)" />
+                <XAxis dataKey="name" tick={{ fill: 'var(--text-muted)', fontSize: 12 }} axisLine={{ stroke: 'var(--border)' }} tickLine={false} />
+                <YAxis allowDecimals={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} axisLine={false} tickLine={false} />
+                <Tooltip
+                  cursor={{ fill: 'var(--surface-muted)' }}
+                  contentStyle={{ borderRadius: 10, border: '1px solid var(--border)', fontSize: 13 }}
+                />
+                <Bar dataKey="count" name="Tasks" radius={[8, 8, 0, 0]} maxBarSize={64}>
+                  {chartData.map((entry) => (
+                    <Cell key={entry.key} fill={STATUS_COLORS[entry.key]} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 24, marginTop: 18, fontSize: 13, flexWrap: 'wrap' }}>
+            <span><span className="legend-dot" style={{ background: STATUS_COLORS.completed }} />Completed: {chartData[0].count}</span>
+            <span><span className="legend-dot" style={{ background: STATUS_COLORS['in-progress'] }} />In Progress: {chartData[1].count}</span>
+            <span><span className="legend-dot" style={{ background: STATUS_COLORS.pending }} />Pending: {chartData[2].count}</span>
+          </div>
         </div>
       </div>
     </div>
-  )
+  );
 }
