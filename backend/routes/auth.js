@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const { auth, checkRole, COOKIE_NAME } = require('../middleware/auth');
 const { encrypt } = require('../utils/tokenEncryption');
 
-const TOKEN_EXPIRY = '10s';
+const TOKEN_EXPIRY = '1d';
 const TOKEN_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
 const createToken = (user) => {
